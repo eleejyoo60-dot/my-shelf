@@ -1,0 +1,29 @@
+!doctype html
+meta charset=utf-8
+style
+  body { margin0; background#f1efec; font-familysans-serif; }
+  #shelf { displayflex; align-itemsflex-end; gap2px;
+           padding30px 20px 0; border-bottom14px solid #4a2c1a;
+           overflow-xauto; }
+  .book { writing-modevertical-rl; displayflex; align-itemscenter;
+          justify-contentcenter; color#fff; font-size13px;
+          padding8px 0; border-radius2px; white-spacenowrap;
+          transitiontransform .15s; cursorpointer; }
+  .bookhover { transformtranslateY(-8px); }
+style
+div id=shelfdiv
+script
+fetch(apibooks).then(r = r.json()).then(books = {
+  const shelf = document.getElementById(shelf);
+  books.forEach(b = {
+    const el = document.createElement(div);
+    el.className = book;
+    el.textContent = b.title;
+    el.title = b.title +    + b.author;
+    el.style.background = b.color;
+    el.style.height = b.height + px;
+    el.style.width = Math.max(22, Math.min(60, b.pages  9)) + px;
+    shelf.appendChild(el);
+  });
+});
+script
