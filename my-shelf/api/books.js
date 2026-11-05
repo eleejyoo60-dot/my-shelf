@@ -1,7 +1,7 @@
 // 노션 속성 이름 (데이터베이스와 다르면 여기만 수정하세요)
 const PROP = {
   author: "저자",
-  pages: "쪽수",
+  pages: "페이지수",
   color: "색상",
   height: "높이",
   spine: "책등 이미지",
