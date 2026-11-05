@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       return {
         title: titleProp?.title?.map((t) => t.plain_text).join("") ?? "",
         author: pr["저자"]?.rich_text?.[0]?.plain_text ?? "",
-        pages: pr["쪽수"]?.number ?? 250,
+        pages: pr["페이지수"]?.number ?? 250,
         color: pr["색상"]?.rich_text?.[0]?.plain_text || "#888",
         height: pr["높이"]?.number ?? 190,
       };
