@@ -11,8 +11,8 @@ const PROP = {
 // 책장에 보여줄 상태 값. 비워 두면 전부 표시. 예: ["읽는 중", "완독"]
 const SHOW_STATUS = [];
 
-// 책장에서 뺄 제목. 예: ["독서노트 기본", "제호"]
-const EXCLUDE_TITLES = ["독서노트 기본"];
+// 책장에서 뺄 제목. 예: ["독서노트_기본", "제호"]
+const EXCLUDE_TITLES = ["독서노트_기본"];
 
 const getText = (v) =>
   v?.rich_text?.map((t) => t.plain_text).join("") || v?.select?.name || "";
