@@ -6,6 +6,7 @@ const PROP = {
   height: "높이",
   spine: "책등이미지",
   status: "상태",
+  date: "완독일", // 다 읽은 날짜 (날짜 유형)
 };
 
 // 책장에 보여줄 상태 값. 비워 두면 전부 표시. 예: ["읽는 중", "완독"]
@@ -47,11 +48,12 @@ export default async function handler(req, res) {
       cursor = data.has_more ? data.next_cursor : undefined;
     } while (cursor);
 
-    const books = results
+    let books = results
       .map((p) => {
         const pr = p.properties;
         const titleProp = Object.values(pr).find((v) => v.type === "title");
         const status = pr[PROP.status]?.status?.name ?? pr[PROP.status]?.select?.name ?? "";
+        const d = pr[PROP.date]?.date;
         return {
           title: titleProp?.title?.map((t) => t.plain_text).join("") ?? "",
           author: getText(pr[PROP.author]),
@@ -60,11 +62,25 @@ export default async function handler(req, res) {
           height: pr[PROP.height]?.number ?? 190,
           spine: getSpine(pr[PROP.spine]),
           status,
+          date: (d?.end ?? d?.start ?? "").slice(0, 10),
           url: p.url,
         };
       })
       .filter((b) => !EXCLUDE_TITLES.includes(b.title))
       .filter((b) => SHOW_STATUS.length === 0 || SHOW_STATUS.includes(b.status));
+
+    // 주소 뒤에 ?range=month (최근 30일) 또는 ?range=thismonth (이번 달)
+    const range = req.query?.range;
+    if (range === "month") {
+      const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+      books = books.filter((b) => b.date && b.date >= cutoff);
+    } else if (range === "thismonth") {
+      const ym = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 7);
+      books = books.filter((b) => b.date.startsWith(ym));
+    }
+    if (range) {
+      books.sort((a, b) => a.date.localeCompare(b.date));
+    }
 
     res.setHeader("Cache-Control", "s-maxage=60");
     res.status(200).json(books);
