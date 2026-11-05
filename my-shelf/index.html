@@ -18,7 +18,7 @@
 <div id="shelf"></div>
 <div id="msg"></div>
 <script>
-fetch("/api/books")
+fetch("/api/books" + location.search)
   .then(r => r.json())
   .then(books => {
     if (!Array.isArray(books)) {
