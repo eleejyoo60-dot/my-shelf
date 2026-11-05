@@ -1,33 +1,72 @@
+// 노션 속성 이름 (데이터베이스와 다르면 여기만 수정하세요)
+const PROP = {
+  author: "저자",
+  pages: "쪽수",
+  color: "색상",
+  height: "높이",
+  spine: "책등 이미지",
+  status: "상태",
+};
+
+// 책장에 보여줄 상태 값. 비워 두면 전부 표시. 예: ["읽는 중", "완독"]
+const SHOW_STATUS = [];
+
+// 책장에서 뺄 제목. 예: ["독서노트 기본", "제호"]
+const EXCLUDE_TITLES = ["독서노트 기본"];
+
+const getText = (v) =>
+  v?.rich_text?.map((t) => t.plain_text).join("") || v?.select?.name || "";
+
+const getSpine = (v) => {
+  const f = v?.files?.[0];
+  return f?.file?.url ?? f?.external?.url ?? v?.url ?? "";
+};
+
 export default async function handler(req, res) {
   try {
-    const r = await fetch(
-      `https://api.notion.com/v1/data_sources/${process.env.NOTION_DB_ID}/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
-          "Notion-Version": "2025-09-03",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ page_size: 100 }),
+    let results = [];
+    let cursor;
+    do {
+      const r = await fetch(
+        `https://api.notion.com/v1/data_sources/${process.env.NOTION_DB_ID}/query`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
+            "Notion-Version": "2025-09-03",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ page_size: 100, start_cursor: cursor }),
+        }
+      );
+      const data = await r.json();
+      if (!data.results) {
+        return res.status(500).json(data);
       }
-    );
-    const data = await r.json();
-    if (!data.results) {
-      return res.status(500).json(data);
-    }
-    const books = data.results.map((p) => {
-      const pr = p.properties;
-      const titleProp = Object.values(pr).find((v) => v.type === "title");
-      return {
-        title: titleProp?.title?.map((t) => t.plain_text).join("") ?? "",
-        author: pr["저자"]?.rich_text?.[0]?.plain_text ?? "",
-        pages: pr["페이지수"]?.number ?? 250,
-        color: pr["색상"]?.rich_text?.[0]?.plain_text || "#888",
-        height: pr["높이"]?.number ?? 190,
-      };
-    });
-    res.setHeader("Cache-Control", "s-maxage=300");
+      results = results.concat(data.results);
+      cursor = data.has_more ? data.next_cursor : undefined;
+    } while (cursor);
+
+    const books = results
+      .map((p) => {
+        const pr = p.properties;
+        const titleProp = Object.values(pr).find((v) => v.type === "title");
+        const status = pr[PROP.status]?.status?.name ?? pr[PROP.status]?.select?.name ?? "";
+        return {
+          title: titleProp?.title?.map((t) => t.plain_text).join("") ?? "",
+          author: getText(pr[PROP.author]),
+          pages: pr[PROP.pages]?.number ?? 250,
+          color: getText(pr[PROP.color]) || "#888",
+          height: pr[PROP.height]?.number ?? 190,
+          spine: getSpine(pr[PROP.spine]),
+          status,
+          url: p.url,
+        };
+      })
+      .filter((b) => !EXCLUDE_TITLES.includes(b.title))
+      .filter((b) => SHOW_STATUS.length === 0 || SHOW_STATUS.includes(b.status));
+
+    res.setHeader("Cache-Control", "s-maxage=60");
     res.status(200).json(books);
   } catch (e) {
     res.status(500).json({ error: String(e) });
