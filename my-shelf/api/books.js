@@ -59,7 +59,7 @@ export default async function handler(req, res) {
           author: getText(pr[PROP.author]),
           pages: pr[PROP.pages]?.number ?? 250,
           color: getText(pr[PROP.color]) || "#888",
-          height: pr[PROP.height]?.number ?? 450,
+          height: pr[PROP.height]?.number ?? 400,
           spine: getSpine(pr[PROP.spine]),
           status,
           date: (d?.end ?? d?.start ?? "").slice(0, 10),
