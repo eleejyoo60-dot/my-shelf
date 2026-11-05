@@ -1,5 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   body { margin: 0; background: #f1efec; font-family: sans-serif; }
   #shelf { display: flex; align-items: flex-end; gap: 2px;
@@ -10,20 +11,29 @@
           padding: 8px 0; border-radius: 2px; white-space: nowrap;
           transition: transform .15s; cursor: pointer; }
   .book:hover { transform: translateY(-8px); }
+  #msg { padding: 20px; color: #a33; }
 </style>
 <div id="shelf"></div>
+<div id="msg"></div>
 <script>
-fetch("/api/books").then(r => r.json()).then(books => {
-  const shelf = document.getElementById("shelf");
-  books.forEach(b => {
-    const el = document.createElement("div");
-    el.className = "book";
-    el.textContent = b.title;
-    el.title = b.title + " / " + b.author;
-    el.style.background = b.color;
-    el.style.height = b.height + "px";
-    el.style.width = Math.max(22, Math.min(60, b.pages / 9)) + "px";
-    shelf.appendChild(el);
-  });
-});
+fetch("/api/books")
+  .then(r => r.json())
+  .then(books => {
+    if (!Array.isArray(books)) {
+      document.getElementById("msg").textContent = JSON.stringify(books);
+      return;
+    }
+    const shelf = document.getElementById("shelf");
+    books.forEach(b => {
+      const el = document.createElement("div");
+      el.className = "book";
+      el.textContent = b.title;
+      el.title = b.title + " / " + b.author;
+      el.style.background = b.color;
+      el.style.height = b.height + "px";
+      el.style.width = Math.max(22, Math.min(60, b.pages / 9)) + "px";
+      shelf.appendChild(el);
+    });
+  })
+  .catch(e => { document.getElementById("msg").textContent = String(e); });
 </script>
