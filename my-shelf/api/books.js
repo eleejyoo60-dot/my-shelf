@@ -4,7 +4,7 @@ const PROP = {
   pages: "페이지수",
   color: "색상",
   height: "높이",
-  spine: "책등 이미지",
+  spine: "책등이미지",
   status: "상태",
 };
 
