@@ -9,8 +9,10 @@
   .book { writing-mode: vertical-rl; display: flex; align-items: center;
           justify-content: center; color: #fff; font-size: 13px;
           padding: 8px 0; border-radius: 2px; white-space: nowrap;
-          transition: transform .15s; cursor: pointer; }
+          transition: transform .15s; cursor: pointer; flex: none; }
   .book:hover { transform: translateY(-8px); }
+  .book.img { padding: 0; background: none; writing-mode: horizontal-tb; }
+  .book.img img { display: block; width: auto; border-radius: 2px; }
   #msg { padding: 20px; color: #a33; }
 </style>
 <div id="shelf"></div>
@@ -27,11 +29,21 @@ fetch("/api/books")
     books.forEach(b => {
       const el = document.createElement("div");
       el.className = "book";
-      el.textContent = b.title;
       el.title = b.title + " / " + b.author;
-      el.style.background = b.color;
-      el.style.height = b.height + "px";
-      el.style.width = Math.max(22, Math.min(60, b.pages / 9)) + "px";
+      el.onclick = () => window.open(b.url, "_blank");
+      if (b.spine) {
+        el.classList.add("img");
+        const img = document.createElement("img");
+        img.src = b.spine;
+        img.alt = b.title;
+        img.style.height = b.height + "px";
+        el.appendChild(img);
+      } else {
+        el.textContent = b.title;
+        el.style.background = b.color;
+        el.style.height = b.height + "px";
+        el.style.width = Math.max(22, Math.min(70, b.pages / 6)) + "px";
+      }
       shelf.appendChild(el);
     });
   })
